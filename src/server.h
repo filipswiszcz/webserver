@@ -22,19 +22,15 @@ class Server {
             return sock;
         }
 
-        char* getBuff() {
-            return buff;
-        }
-
         void run();
 
         void response(const int sock);
 
     private:
 
-        unsigned short port = 8080;
+        
+        unsigned short port = 80;
         sockaddr_in sock;
-        char buff[1200];
 
         std::string read(const std::string request);
 
