@@ -3,7 +3,7 @@
 #pragma mark - Factory
 #pragma region Factory {
 
-    Factory::Factory(size_t num) {
+    Factory::Factory(const size_t num) {
 
         for (size_t i = 0; i < num; i++) {
             workers.emplace_back([this] {

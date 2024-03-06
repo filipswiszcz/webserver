@@ -10,27 +10,31 @@
 #include <sstream>
 #include <string>
 
+#include "worker/factory.h"
+
 class Server {
 
     public:
 
-        unsigned short getPort() {
-            return port;
-        }
+        Server(const int port);
 
-        sockaddr_in getSocket() {
-            return sock;
-        }
+        ~Server();
+
+        void init();
 
         void run();
 
-        void response(const int sock);
+        void stop();
+
+        void response(const int sock); // TODO it probably shouldn't be here
 
     private:
 
-        
-        unsigned short port = 80;
+        Factory factory;
+
+        int sock_dsc;
         sockaddr_in sock;
+        int port;
 
         std::string read(const std::string request);
 
