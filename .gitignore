@@ -3,6 +3,9 @@
 !/**/
 !*.*
 
+# cmake files
+build
+
 # xcode debug files
 *.dSYM
 

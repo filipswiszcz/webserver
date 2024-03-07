@@ -16,7 +16,7 @@ class Client {
 
     public:
 
-        Client(const int sock_dsc, const sockaddr_in);
+        Client(const int sock_dsc, const sockaddr_in sock);
 
         ~Client();
 
