@@ -5,19 +5,21 @@
 
     Factory::Factory(const size_t num) {
 
+        this -> running = true;
+
         for (size_t i = 0; i < num; i++) {
-            workers.emplace_back([this] {
+            this -> workers.emplace_back([this] {
                 while (true) {
                     std::function<void()> t;
 
                     {
-                        std::unique_lock<std::mutex> guard(tasks_guard);
+                        std::unique_lock<std::mutex> guard(this -> tasks_guard);
 
-                        cond.wait(guard, [this] {return !tasks.empty() || stop;});
+                        this -> cond.wait(guard, [this] {return !tasks.empty() || !running;});
 
-                        if (stop && tasks.empty()) return;
+                        if (running && this -> tasks.empty()) return;
 
-                        t = std::move(tasks.front()); tasks.pop();
+                        t = std::move(this -> tasks.front()); this -> tasks.pop(); guard.unlock();
                     }
 
                     t();
@@ -29,23 +31,22 @@
     Factory::~Factory() {
 
         {
-            std::unique_lock<std::mutex> guard(tasks_guard); stop = true;
+            std::unique_lock<std::mutex> guard(this -> tasks_guard); this -> running = false;
         }
 
-        cond.notify_all();
+        this -> cond.notify_all();
 
-        for (auto& worker : workers) {worker.join();}
+        for (auto& worker : this -> workers) {worker.join();}
     }
 
     void Factory::enqueue(std::function<void()> task) {
 
         {
-            std::unique_lock<std::mutex> guard(tasks_guard);
-            tasks.emplace(std::move(task));
+            std::unique_lock<std::mutex> guard(this -> tasks_guard);
+            this -> tasks.emplace(std::move(task));
         }
 
-        cond.notify_all();
+        this -> cond.notify_all();
     }
-
 
 #pragma endregion Factory }

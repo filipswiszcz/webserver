@@ -20,8 +20,6 @@ class Factory {
 
         void enqueue(std::function<void()> task);
 
-        void dequeue();
-
     private:
 
         std::vector<std::thread> workers;
@@ -29,7 +27,7 @@ class Factory {
         std::mutex tasks_guard;
         std::condition_variable cond;
 
-        bool stop = false;
+        bool running;
 
 };
 

@@ -3,6 +3,8 @@
 
 #include <sys/socket.h>
 #include <netdb.h>
+#include <netinet/in.h>
+#include <sys/poll.h>
 #include <unistd.h>
 
 #include <iostream>
@@ -36,7 +38,11 @@ class Server {
         sockaddr_in sock;
         int port;
 
+        bool running = true;
+
         std::string read(const std::string request);
+
+        // std::thread find_worker();
 
 };
 

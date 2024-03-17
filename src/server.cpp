@@ -13,7 +13,7 @@
 
     void Server::init() {
         int serv_id = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-        if (serv_id == -1) {std::cerr << "Error occurred while creating the server socket." << std::endl; exit(0);}
+        if (serv_id == -1) {std::cerr << "Error occurred while creating the server socket." << std::endl; exit(1);}
 
         sockaddr_in sock; memset(&sock, 0, sizeof(sock));
         sock.sin_family = AF_INET;
@@ -21,7 +21,7 @@
         sock.sin_port = htons(port);
 
         int b = bind(serv_id, (sockaddr*) &sock, sizeof(sock));
-        if (b != 0) {std::cerr << "Error occurred while binding the socket to the address." << std::endl; exit(0);}
+        if (b != 0) {std::cerr << "Error occurred while binding the socket to the address." << std::endl; exit(1);}
 
         this -> sock_dsc = serv_id;
         this -> sock = sock;
@@ -30,35 +30,35 @@
     void Server::run() {
 
         // init single thread
-            // while !stop, wait for connections with selector
+            // while !stop, wait for connections with poll (epoll is not working on macos because it is called kqueue here)
                 // find worker
                 // accept connection
                 // let worker handle the rest
 
         int l = listen(this -> sock_dsc, 5);
-        if (l != 0) {std::cerr << "Error occurred while listening for a connection." << std::endl; exit(0);}
-
+        if (l != 0) {std::cerr << "Error occurred while listening for a connection." << std::endl; exit(1);}
         std::cout << "Waiting for connection on port " << 80 << std::endl;
 
-        while (true) {
+        this -> running = true;
 
-            sockaddr_in new_sock;
-            socklen_t new_sock_addr = sizeof(new_sock);
+        std::thread t([this]() {
+            while (running) {
 
-            int client_id = accept(this -> sock_dsc, (sockaddr*) &new_sock, &new_sock_addr);
-            if (client_id < 1) {std::cerr << "Error occurred while accepting the connection." << std::endl; exit(0);} // TODO move to next one
-            std::cout << "Connected with a new client: " << client_id << std::endl;
+                sockaddr_in client_sock;
+                socklen_t client_sock_addr = sizeof(client_sock);
 
-            // create client in worker and add to the connection map
+                int client_id = accept(this -> sock_dsc, (sockaddr*) &client_sock, &client_sock_addr);
+                if (client_id < 1) {std::cerr << "Error occurred while accepting the connection." << std::endl; exit(1);} // TODO move to next one
+                std::cout << "New connection from id=" << client_id << std::endl;
+                
+                this -> factory.enqueue([this, client_id, client_sock] {
+                    Client client(client_id, client_sock); // TODO add client to connection map
+                    Server::response(client_id);
+                });
+            }
+        });
 
-            factory.enqueue([this, client_id] {
-                // TODO here should be a conn establishing and send
-                Server::response(client_id);
-            });
-
-
-
-        }
+        t.join();
 
         //Server::response(client_id);
 
@@ -72,7 +72,7 @@
 
     void Server::response(const int sock) {
 
-        const std::string request = Server::read("templates/index.html");
+        const std::string request = Server::read("templates/index.html"); // TODO templates should have an absolute path
 
         std::stringstream raw_header;
         raw_header << "HTTP/1.0 200 OK\r\n"
@@ -88,7 +88,9 @@
         res = send(sock, request.data(), request.length(), MSG_NOSIGNAL);
         if (res < 1) {std::cerr << "Failed to send the response." << std::endl; return;}
 
-        while(true) {} // TODO i need to hold the connection, to properly send data.
+        while(true) {
+            std::this_thread::sleep_for(std::chrono::seconds(5)); break;
+        } // TODO i need to hold the connection, to properly send data.
                             // receive a conn in an available thread
                             // move it, to the main thread's connection map, as a new client
                                 // somewhere along the lines, think about region distributions, to handle very large amount of connections
