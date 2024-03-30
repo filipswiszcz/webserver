@@ -1,6 +1,4 @@
 #include "server.h"
-#include "worker/factory.h"
-#include "client.h"
 
 #pragma mark - Server
 #pragma region Server {
@@ -53,10 +51,13 @@
                 
                 this -> factory.enqueue([this, client_id, client_sock] {
                     Client client(client_id, client_sock); // TODO add client to connection map
-                    Server::response(client_id);
+                    this -> add_conn(client);
+                    // Server::response(client_id);
                 });
             }
         });
+
+        this -> tick();
 
         t.join();
 
@@ -69,6 +70,39 @@
     }
 
     void Server::stop() {}
+
+    void Server::tick() {
+        std::thread t([this]() {
+            while (running) {
+                std::cout << "[alive]" << std::endl;
+                std::this_thread::sleep_for(std::chrono::seconds(5));
+
+                for (auto client : this -> conns) {
+                    std::cout << client -> getSockDescriptor() << std::endl;
+                    Server::response(client -> getSockDescriptor()); std::cout << "[sent]" << std::endl;
+                }
+            }
+        });
+
+        t.join();
+    }
+
+    void Server::debug() { // i have no idea if this is going to work
+        this -> debugging = !(this -> debugging);
+    }
+
+    void Server::add_conn(const Client& client) { // TODO check if client is already there
+        this -> conns.push_back(new Client(client));         // also resolve opening same www in second tab
+        if (this -> debugging) {std::cout << "[debug] added a new client " << client.getSockDescriptor() << " to conn list." << std::endl;}
+    }
+
+    void Server::del_conn(const int sock_dsc) {
+        for (int i = 0; i < this -> conns.size(); i++) {
+            if (this -> conns[i] -> getSockDescriptor() != sock_dsc) continue;
+            delete this -> conns[i]; this -> conns.erase(this -> conns.begin() + i); break;
+        }
+        if (this -> debugging) {std::cout << "[debug] deleted client " << sock_dsc << " from conn list." << std::endl;}
+    }
 
     void Server::response(const int sock) {
 
@@ -88,9 +122,19 @@
         res = send(sock, request.data(), request.length(), MSG_NOSIGNAL);
         if (res < 1) {std::cerr << "Failed to send the response." << std::endl; return;}
 
-        while(true) {
-            std::this_thread::sleep_for(std::chrono::seconds(5)); break;
-        } // TODO i need to hold the connection, to properly send data.
+        /*while(true) {
+            std::this_thread::sleep_for(std::chrono::seconds(5));
+            
+            std::cout << "pulse" << std::endl;
+
+            std::this_thread::sleep_for(std::chrono::seconds(5));
+            
+            std::cout << "pulse" << std::endl;
+
+            std::this_thread::sleep_for(std::chrono::seconds(5));
+
+            break;
+        }*/ // TODO i need to hold the connection, to properly send data.
                             // receive a conn in an available thread
                             // move it, to the main thread's connection map, as a new client
                                 // somewhere along the lines, think about region distributions, to handle very large amount of connections

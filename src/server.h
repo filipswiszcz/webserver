@@ -12,7 +12,10 @@
 #include <sstream>
 #include <string>
 
+#include <random>
+
 #include "worker/factory.h"
+#include "client.h"
 
 class Server {
 
@@ -28,6 +31,14 @@ class Server {
 
         void stop();
 
+        void tick();
+
+        void debug();
+
+        void add_conn(const Client& client);
+
+        void del_conn(const int sock_dsc);
+
         void response(const int sock); // TODO it probably shouldn't be here
 
     private:
@@ -39,6 +50,9 @@ class Server {
         int port;
 
         bool running = true;
+        bool debugging = true;
+
+        std::vector<Client*> conns;
 
         std::string read(const std::string request);
 

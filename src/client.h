@@ -20,7 +20,7 @@ class Client {
 
         ~Client();
 
-        int getSockDescriptor() {
+        int getSockDescriptor() const {
             return sock_dsc;
         }
 

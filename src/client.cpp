@@ -11,7 +11,10 @@
 #pragma mark - Client
 #pragma region Client {
 
-    Client::Client(const int sock_dsc, const sockaddr_in) {}
+    Client::Client(const int sock_dsc, const sockaddr_in sock) {
+        this -> sock_dsc = sock_dsc;
+        this -> sock = sock;
+    }
 
     Client::~Client() {}
 
