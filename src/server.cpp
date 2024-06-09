@@ -35,7 +35,8 @@
 
         int l = listen(this -> sock_dsc, 5);
         if (l != 0) {std::cerr << "Error occurred while listening for a connection." << std::endl; exit(1);}
-        std::cout << "Waiting for connection on port " << 80 << std::endl;
+        // std::cout << "Waiting for connection on port " << 80 << std::endl;
+        logger.info("Waiting for connection on port " + std::to_string(80));
 
         this -> running = true;
 
@@ -78,8 +79,8 @@
                 std::this_thread::sleep_for(std::chrono::seconds(5));
 
                 for (auto client : this -> conns) {
-                    std::cout << client -> getSockDescriptor() << std::endl;
-                    Server::response(client -> getSockDescriptor()); std::cout << "[sent]" << std::endl;
+                    std::cout << "client_dsc: " << client -> getSockDescriptor() << std::endl;
+                    Server::response(client -> getSockDescriptor()); // TODO send only, when client request something new
                 }
             }
         });
@@ -121,6 +122,8 @@
 
         res = send(sock, request.data(), request.length(), MSG_NOSIGNAL);
         if (res < 1) {std::cerr << "Failed to send the response." << std::endl; return;}
+
+        std::cout << "[response_sent]" << std::endl;
 
         /*while(true) {
             std::this_thread::sleep_for(std::chrono::seconds(5));

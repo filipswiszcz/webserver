@@ -17,6 +17,8 @@
 #include "worker/factory.h"
 #include "client.h"
 
+#include "util/logger.hpp"
+
 class Server {
 
     public:
@@ -43,11 +45,13 @@ class Server {
 
     private:
 
-        Factory factory;
+        worker::Factory factory;
 
         int sock_dsc;
         sockaddr_in sock;
         int port;
+
+        util::Logger logger;
 
         bool running = true;
         bool debugging = true;

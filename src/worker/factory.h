@@ -10,25 +10,29 @@
 #include <mutex>
 #include <condition_variable>
 
-class Factory {
+namespace worker {
 
-    public:
+    class Factory {
 
-        Factory(const size_t num);
+        public:
 
-        ~Factory();
+            Factory(const size_t num);
 
-        void enqueue(std::function<void()> task);
+            ~Factory();
 
-    private:
+            void enqueue(std::function<void()> task);
 
-        std::vector<std::thread> workers;
-        std::queue<std::function<void()>> tasks;
-        std::mutex tasks_guard;
-        std::condition_variable cond;
+        private:
 
-        bool running;
+            std::vector<std::thread> workers;
+            std::queue<std::function<void()>> tasks;
+            std::mutex tasks_guard;
+            std::condition_variable cond;
 
-};
+            bool running;
+
+    };
+
+} // namespace worker
 
 #endif

@@ -3,6 +3,8 @@
 #pragma mark - Factory
 #pragma region Factory {
 
+namespace worker {
+
     Factory::Factory(const size_t num) {
 
         this -> running = true;
@@ -48,5 +50,7 @@
 
         this -> cond.notify_all();
     }
+
+} // namespace worker
 
 #pragma endregion Factory }
